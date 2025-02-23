@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<h1>Blog</h1>
+<form id="blogForm">
+    <input type="text" id="title" placeholder="Title" required>
+    <textarea id="body" placeholder="Body" required></textarea>
+    <input type="text" id="author" placeholder="Author">
+    <button type="submit">Add Blog</button>
+</form>
+<div id="blogs"></div>
+<a href="/index1.html">Вернуться на главную</a>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchBlogs();
+
+        const form = document.getElementById("blogForm");
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById("title").value;
+            const body = document.getElementById("body").value;
+            const author = document.getElementById("author").value;
+            const blogId = form.dataset.blogId;
+
+            if (blogId) {
+                await fetch(`/api/blogs/${blogId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title, body, author })
+                });
+
+                delete form.dataset.blogId;
+                form.querySelector("button").textContent = "Add Blog";
+            } else {
+                await fetch("/api/blogs", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title, body, author })
+                });
+            }
+
+            form.reset();
+            fetchBlogs();
+        });
+    });
+
+    async function fetchBlogs() {
+        const res = await fetch("/api/blogs");
+        const blogs = await res.json();
+        const blogsContainer = document.getElementById("blogs");
+
+        blogsContainer.innerHTML = "";
+        blogs.forEach(blog => {
+            const div = document.createElement("div");
+            div.classList.add("blog");
+            div.innerHTML = `
+            <h3>${blog.title}</h3>
+            <p>${blog.body}</p>
+            <small>by ${blog.author}</small>
+            <button onclick="deleteBlog('${blog._id}')">Delete</button>
+            <button onclick="editBlog('${blog._id}', '${blog.title}', '${blog.body}', '${blog.author}')">Edit</button>
+        `;
+            blogsContainer.appendChild(div);
+        });
+    }
+
+    async function deleteBlog(id) {
+        await fetch(`/api/blogs/${id}`, { method: "DELETE" });
+        fetchBlogs();
+    }
+
+    function editBlog(id, title, body, author) {
+        document.getElementById("title").value = title;
+        document.getElementById("body").value = body;
+        document.getElementById("author").value = author;
+
+        const form = document.getElementById("blogForm");
+        form.dataset.blogId = id;
+        form.querySelector("button").textContent = "Update Blog";
+    }
+
+</script>
+</body>
+</html>

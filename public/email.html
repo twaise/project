@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Email</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<h1>Send Email</h1>
+<form id="emailForm">
+    <button type="submit">Send Email</button>
+</form>
+<a href="/index1.html">Вернуться на главную</a>
+<script>
+    document.getElementById('emailForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const response = await fetch('/send-email', { method: 'POST' });
+        const result = await response.text();
+        alert(result);
+    });
+</script>
+</body>
+</html>
