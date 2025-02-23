@@ -7,7 +7,8 @@ const nodemailer = require('nodemailer');
 const axios = require('axios');
 const { MongoClient, ObjectId } = require('mongodb');
 const path = require('path');
-
+const qr = require('qr-image');
+const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -120,3 +121,22 @@ app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
 
+
+app.post('/generate-qr', (req, res) => {
+    const { url } = req.body;
+    if (!url) return res.status(400).send('URL не указан');
+
+    const qrCode = qr.image(url, { type: 'png' });
+    const filePath = path.join(__dirname, 'public', 'qr.png');
+    const writeStream = fs.createWriteStream(filePath);
+
+    qrCode.pipe(writeStream);
+
+    writeStream.on('finish', () => {
+        res.json({ message: 'QR-код создан', url: '/qr.png' });
+    });
+
+    writeStream.on('error', (err) => {
+        res.status(500).send('Ошибка сохранения QR-кода');
+    });
+});
